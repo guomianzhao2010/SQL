@@ -114,3 +114,66 @@ select film_id  from film_category where category_id in (
 select category_id from category where name="Family");
 
 
+
+select title from film where film_id in (
+
+select film_id  from  inventory 
+where inventory_id in (
+select inventory_id from  rental) 
+group by film_id
+order by count(inventory_id) desc
+);
+
+
+select t2.store_id, t1.a
+from  (
+select staff_id, sum(amount) as a from payment group by staff_id ) t1
+inner join 
+(select store_id from store) t2
+on t2.store_id=t1.staff_id;
+
+
+-- 7h and 8e a lot of joins and subqueries , also creating a view 
+create view top_five_genres as 
+(
+select t8.name, t7.revenue
+from 
+(
+select t6. category_id, sum(t5.c) as revenue
+from (
+select t4.film_id, sum(t3.b) as c 
+from 
+(
+select t2.inventory_Id, sum(t.a) as b
+from 
+(
+select rental_id, sum(amount) as a from payment group by rental_id order by sum(amount) desc) t
+inner join
+(select inventory_id, rental_id from rental) t2
+on t2. rental_id = t.rental_id
+group by t2.inventory_id order by sum(t.a) desc
+
+)  as t3 
+
+inner join 
+(select film_id, inventory_id from inventory) t4
+on t3.inventory_id=t4.inventory_id
+group by t4.film_id order by sum(t3.b)  desc
+) as t5 
+inner join 
+(select film_id, category_id from film_category) as t6
+on t6.film_id=t5.film_id
+group by category_id order by sum(t5.c) desc
+) as t7 
+inner join 
+(select name, category_id from category) as t8
+on t8.category_id=t7.category_id
+limit 0,5)
+;
+
+
+select * from  top_five_genres; 
+drop view top_five_genres;
+
+
+
